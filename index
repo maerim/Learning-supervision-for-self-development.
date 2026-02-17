@@ -145,7 +145,7 @@
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
             <div>
                 <h2 class="text-2xl font-bold text-slate-900">Dashboard</h2>
-                <p class="text-slate-500">ภาพรวมการนิเทศการเรียนรู้เพื่อการพัฒนาตนเองรู้ ภาคเรียนที่ 2/2568</p>
+                <p class="text-slate-500">ภาพรวมการนิเทศการจัดการเรียนรู้ ภาคเรียนที่ 2/2568</p>
             </div>
             <div class="flex gap-2">
                 <button onclick="loadInitialData()" class="p-2 px-4 bg-white border border-slate-200 rounded-xl text-slate-600 hover:bg-slate-50"><i class="fas fa-sync-alt"></i></button>
@@ -357,7 +357,7 @@
     <div class="flex items-center gap-6 mb-6 pb-6 border-b-2 border-slate-800">
         <img src="https://lh3.googleusercontent.com/pw/AP1GczPwzDwftGwpLJnfW74bLfgx4GmVpPVq2MoOkd7srBGreuQM1qtFQwLIg0tytng6BEfEjce4nio81AWrPno9hrj80dIz_koQ4_SpcN832yfuOVnwi-_oZuAfCsbYOdOuoivktXbQIhjSBbZIngPIUYY=w900-h900-s-no-gm?authuser=0" class="w-24 h-24" alt="Garuda">
         <div>
-            <h1 class="text-xl font-bold uppercase">แบบรายงานผลการเรียนรู้เพื่อการพัฒนาตนเอง</h1>
+            <h1 class="text-xl font-bold uppercase">แบบรายงานผลการนิเทศการจัดการเรียนการสอน</h1>
             <h2 class="text-lg font-bold">ศูนย์ส่งเสริมการเรียนรู้ระดับอำเภอแม่ริม</h2>
             <p>ภาคเรียนที่ 2 ปีการศึกษา 2568</p>
         </div>
