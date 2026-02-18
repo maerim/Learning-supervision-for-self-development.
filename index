@@ -26,7 +26,8 @@
     <iframe 
         loading="lazy" 
         class="responsive-iframe"
-        src="https://script.google.com/macros/s/AKfycbxw_sFg2jp7IVMlXl3QTxMNnUbBrDmicDXjxJSC_-qpMElIL-lFhpGhAopAVYiDBWz-5g/execn" 
+        src="https://script.google.com/macros/s/AKfycbxw_sFg2jp7IVMlXl3QTxMNnUbBrDmicDXjxJSC_-qpMElIL-lFhpGhAopAVYiDBWz-5g/exec" 
+        allowfullscreen="allowfullscreen" 
         allow="fullscreen">
     </iframe>
 </body>
