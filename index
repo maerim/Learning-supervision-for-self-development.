@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>ระบบนิเทศการจัดการเรียนการสอน สกร.ระดับอำเภอดอยหล่อ</title>
+    <title>ระบบนิเทศกการเรียนรู้เพื่อการพัฒนาตนเอง สกร.ระดับอำเภอแม่ริม</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <style>
         /* เปลี่ยน background-color จาก #000 เป็น #ffffff (สีขาว) */
@@ -18,7 +18,7 @@
     </style>
     <script>
         window.onload = function() {
-            document.title = "ระบบนิเทศการจัดการเรียนการสอน สกร.ระดับอำเภอดอยหล่อ";
+            document.title = "ระบบนิเทศกการเรียนรู้เพื่อการพัฒนาตนเอง สกร.ระดับอำเภอแม่ริม";
         };
     </script>
 </head>
