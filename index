@@ -1,33 +1,912 @@
 <!DOCTYPE html>
-<html>
+<html lang="th">
 <head>
-    <meta charset="utf-8">
-    <title>ระบบนิเทศการเรียนรู้เพื่อการพัฒนาตนเอง สกร.ระดับอำเภอแม่ริม</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <style>
-        /* เปลี่ยน background-color จาก #000 เป็น #ffffff (สีขาว) */
-        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; background-color: #ffffff; }
-        .responsive-iframe {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            border: none;
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ระบบนิเทศกการเรียนรู้เพื่อการพัฒนาตนเอง สกร.ระดับอำเภอแม่ริม</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Sarabun', 'sans-serif'] },
+          colors: {
+            primary: '#4F46E5', 
+            secondary: '#64748B', 
+            success: '#10B981', 
+            warning: '#F59E0B', 
+            danger: '#EF4444',
+            surface: '#F8FAFC'
+          }
         }
-    </style>
-    <script>
-        window.onload = function() {
-            document.title = "ระบบนิเทศการเรียนรู้เพื่อการพัฒนาตนเอง สกร.ระดับอำเภอแม่ริม";
-        };
-    </script>
+      }
+    }
+  </script>
+
+  <style>
+    body { font-family: 'Sarabun', sans-serif; background-color: #F1F5F9; }
+    
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #f1f1f1; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    
+    /* Animations */
+    .fade-in { animation: fadeIn 0.4s ease-out forwards; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    
+    /* Buttons */
+    .status-btn { transition: all 0.2s ease; border: 1px solid #E2E8F0; }
+    .status-btn.active.has { background-color: #10B981; color: white; border-color: #10B981; }
+    .status-btn.active.not-has { background-color: #EF4444; color: white; border-color: #EF4444; }
+    
+    .nav-link { transition: all 0.2s ease; border-bottom: 2px solid transparent; }
+    .nav-link.active { color: #4F46E5; font-weight: 600; border-bottom: 2px solid #4F46E5; }
+    
+    .loader { border: 4px solid #f3f3f3; border-top: 4px solid #4F46E5; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    
+    /* Admin Visibility */
+    .admin-only { display: none !important; } 
+    body.is-admin .admin-only { display: block !important; }
+    body.is-admin flex.admin-only { display: flex !important; }
+
+    @media print {
+        @page { size: A4; margin: 0.8cm; }
+        body { background: white; -webkit-print-color-adjust: exact; font-size: 10pt; }
+        body > *:not(#print-layout) { display: none !important; }
+        #print-layout { display: block !important; visibility: visible !important; width: 100% !important; }
+        .no-print { display: none !important; }
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 0.5pt solid black !important; padding: 4px !important; }
+        #p-images-container { display: grid !important; grid-template-columns: repeat(3, 1fr) !important; gap: 8px !important; margin-top: 10px; }
+        #p-images-container img { width: 100%; height: 120px; object-fit: cover; border: 0.5pt solid #ddd; }
+    }
+
+    #print-layout { display: none; }
+  </style>
 </head>
-<body>
-    <iframe 
-        loading="lazy" 
-        class="responsive-iframe"
-        src="https://script.google.com/macros/s/AKfycbwf9lhA0PSyACZ9_KDPAhNj254w4iYnC1xiotBTjCmoBYhFcB7K2_vuXxINDVwfSSv4/exec" 
-        allow="fullscreen">
-    </iframe>
+<body class="text-slate-800 antialiased flex flex-col min-h-screen overflow-x-hidden">
+
+  <!-- Login Modal -->
+  <div id="login-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-sm border border-slate-100 fade-in">
+      <div class="text-center mb-6">
+        <div class="w-16 h-16 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-4 text-indigo-600 text-2xl">
+          <i class="fas fa-lock"></i>
+        </div>
+        <h3 class="text-xl font-bold text-slate-800">ยืนยันตัวตนแอดมิน</h3>
+        <p class="text-slate-500 text-sm">เข้าสู่ระบบเพื่อจัดการข้อมูล</p>
+      </div>
+      <div class="space-y-4">
+        <input type="password" id="admin-pass" class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 outline-none text-center tracking-[0.5em]" placeholder="••••••">
+        <button onclick="handleLogin()" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold shadow-lg transition-all">เข้าสู่ระบบ</button>
+        <button onclick="closeLoginModal()" class="w-full py-2 text-slate-400 hover:text-slate-600 text-sm">ยกเลิก</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div id="loading-spinner" class="fixed inset-0 bg-white/80 backdrop-blur-sm z-[200] hidden flex flex-col items-center justify-center">
+    <div class="loader mb-4"></div>
+    <p class="text-indigo-600 font-medium animate-pulse">กำลังจัดการข้อมูล...</p>
+  </div>
+
+  <!-- Navigation -->
+  <nav class="bg-white shadow-sm border-b border-slate-200 sticky top-0 z-50 no-print">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between h-16">
+        <div class="flex items-center gap-3">
+            <div class="bg-indigo-600 p-2 rounded-lg text-white">
+                <i class="fas fa-chalkboard-teacher text-lg"></i>
+            </div>
+            <div>
+                <h1 class="text-lg font-bold text-slate-900 leading-tight">ระบบนิเทศออนไลน์</h1>
+                <p class="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">สกร.ระดับอำเภอแม่ริม</p>
+            </div>
+        </div>
+
+        <div class="hidden lg:flex items-center space-x-1">
+          <button onclick="showPage('dashboard')" class="nav-link px-3 py-2 text-sm font-medium text-slate-600 hover:text-indigo-600 active" data-page="dashboard">Dashboard</button>
+          <button onclick="showPage('summary')" class="nav-link px-3 py-2 text-sm font-medium text-slate-600 hover:text-indigo-600" data-page="summary">สรุปผล</button>
+          <button onclick="showPage('history')" class="nav-link px-3 py-2 text-sm font-medium text-slate-600 hover:text-indigo-600" data-page="history">ประวัติ</button>
+          <button onclick="showPage('report')" class="nav-link px-3 py-2 text-sm font-medium text-slate-600 hover:text-indigo-600" data-page="report">พิมพ์รายงาน</button>
+          <button onclick="showPage('assessment')" class="admin-only nav-link px-3 py-2 text-sm font-medium text-slate-600 hover:text-indigo-600" data-page="assessment"><i class="fas fa-plus-circle mr-1"></i> บันทึกนิเทศ</button>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <button id="btn-login" onclick="openLoginModal()" class="text-sm px-4 py-2 rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 transition font-medium"><i class="fas fa-user-shield mr-2"></i>Admin</button>
+            <button id="btn-logout" onclick="handleLogout()" class="hidden text-sm px-4 py-2 rounded-full bg-red-50 text-red-600 hover:bg-red-100 transition font-medium"><i class="fas fa-sign-out-alt"></i></button>
+            <button onclick="toggleMobileMenu()" class="lg:hidden p-2 text-slate-600"><i class="fas fa-bars"></i></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mobile Menu -->
+    <div id="mobile-menu" class="hidden lg:hidden bg-white border-t border-slate-100 px-4 py-4 space-y-2">
+        <button onclick="showPage('dashboard')" class="w-full text-left px-4 py-3 rounded-xl text-slate-600 hover:bg-slate-50"><i class="fas fa-home w-8"></i> Dashboard</button>
+        <button onclick="showPage('summary')" class="w-full text-left px-4 py-3 rounded-xl text-slate-600 hover:bg-slate-50"><i class="fas fa-chart-line w-8"></i> สรุปผล</button>
+        <button onclick="showPage('history')" class="w-full text-left px-4 py-3 rounded-xl text-slate-600 hover:bg-slate-50"><i class="fas fa-history w-8"></i> ประวัติ</button>
+        <button onclick="showPage('report')" class="w-full text-left px-4 py-3 rounded-xl text-slate-600 hover:bg-slate-50"><i class="fas fa-print w-8"></i> พิมพ์รายงาน</button>
+        <button onclick="showPage('assessment')" class="admin-only w-full text-left px-4 py-3 rounded-xl text-indigo-600 hover:bg-indigo-50"><i class="fas fa-edit w-8"></i> บันทึกนิเทศ</button>
+    </div>
+  </nav>
+
+  <main class="flex-1 max-w-7xl mx-auto w-full p-4 lg:p-8 no-print">
+    
+    <!-- Dashboard Page -->
+    <div id="dashboard-page" class="page fade-in">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+            <div>
+                <h2 class="text-2xl font-bold text-slate-900">Dashboard</h2>
+                <p class="text-slate-500">ภาพรวมการนิเทศการเรียนรู้เพื่อการพัฒนาตนเอง ภาคเรียนที่ 2/2568</p>
+            </div>
+            <div class="flex gap-2">
+                <button onclick="loadInitialData()" class="p-2 px-4 bg-white border border-slate-200 rounded-xl text-slate-600 hover:bg-slate-50"><i class="fas fa-sync-alt"></i></button>
+            </div>
+        </div>
+        
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <p class="text-slate-500 text-sm">นิเทศสะสม</p>
+                <h3 class="text-3xl font-bold text-slate-800 mt-1" id="stat-total">0</h3>
+            </div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <p class="text-slate-500 text-sm">คะแนนเฉลี่ย</p>
+                <h3 class="text-3xl font-bold text-indigo-600 mt-1" id="stat-avg">0%</h3>
+            </div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <p class="text-slate-500 text-sm">ผู้นิเทศ</p>
+                <h3 class="text-3xl font-bold text-slate-800 mt-1" id="stat-users">0</h3>
+            </div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <p class="text-slate-500 text-sm">ศกร.ตำบล</p>
+                <h3 class="text-3xl font-bold text-slate-800 mt-1" id="stat-places">0</h3>
+            </div>
+        </div>
+
+        <div class="mb-6">
+            <h3 class="font-bold text-slate-800 text-lg mb-4">การนิเทศล่าสุด</h3>
+            <div id="recent-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"></div>
+        </div>
+    </div>
+
+    <!-- Assessment Form Page -->
+    <div id="assessment-page" class="page hidden fade-in max-w-4xl mx-auto">
+        <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 lg:p-10 mb-10">
+            <div class="flex items-center gap-4 mb-8">
+                <div class="w-12 h-12 bg-indigo-100 rounded-2xl flex items-center justify-center text-indigo-600 text-xl">
+                    <i class="fas fa-file-signature"></i>
+                </div>
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-900" id="form-title">บันทึกนิเทศการเรียนรู้เพื่อการพัฒนาตนเอง</h2>
+                    <p class="text-slate-500">กรอกข้อมูลให้ครบถ้วนเพื่อสรุปผลการประเมิน</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10 bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">วันที่นิเทศ</label>
+                        <input type="date" id="f-date" class="w-full px-4 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">ผู้นิเทศ</label>
+                        <select id="f-supervisor" class="w-full px-4 py-2 rounded-xl border border-slate-300 bg-white">
+                            <option value="">เลือกผู้นิเทศ</option>
+                            <option>นางสาวจิณณ์ณิชา สอนสมฤทธิ์</option>
+                            <option>นางสุพรรณี ฟองเงิน</option>
+                            <option>นายศักดา บุญสันท์</option>
+                            <option>นางเดือนฉาย พุงขาว</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">ศกร.ระดับตำบล</label>
+                        <select id="f-tumbon" class="w-full px-4 py-2 rounded-xl border border-slate-300 bg-white">
+                            <option value="">เลือกตำบล</option>
+                            <option>ศกร.ระดับตำบลดอนแก้ว</option>
+                            <option>ศกร.ระดับตำบลริมเหนือ</option>
+                            <option>ศกร.ระดับตำบลริมใต้</option>
+                            <option>ศกร.ระดับตำบลเหมืองแก้ว</option>
+                            <option>ศกร.ระดับตำบลแม่สา</option>
+                            <option>ศกร.ระดับตำบลแม่แรม</option>
+                            <option>ศกร.ระดับตำบลสันโป่ง</option>
+                            <option>ศกร.ระดับตำบลโป่งแยง</option>
+                            <option>ศกร.ระดับตำบลขี้เหล็ก</option>
+                            <option>ศกร.ระดับตำบลห้วยทราย</option>
+                            <option>ศกร.ระดับตำบลสะลวง</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">ครูผู้รับนิเทศ</label>
+                        <select id="f-teacher" class="w-full px-4 py-2 rounded-xl border border-slate-300 bg-white">
+                            <option value="">เลือกรายชื่อครู</option>
+                        </select>
+                    </div>
+                </div>
+                <!-- ชื่อกิจกรรม และ สถานที่จัด -->
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-semibold text-slate-700 mb-1">ชื่อกิจกรรมที่นิเทศ</label>
+                    <input type="text" id="f-activity" class="w-full px-4 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="ระบุชื่อวิชา หรือ กิจกรรมที่สอน...">
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-semibold text-slate-700 mb-1">สถานที่จัดกิจกรรม (ระบุพิกัด/อาคาร)</label>
+                    <input type="text" id="f-location-detail" class="w-full px-4 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="เช่น กศน.ตำบล..., ศูนย์เรียนรู้หมู่บ้าน..., ห้องประชุม...">
+                </div>
+                <div class="md:col-span-2 grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">ระดับชั้น</label>
+                        <select id="f-class" class="w-full px-4 py-2 rounded-xl border border-slate-300 bg-white">
+                            <option>ประถมศึกษา</option>
+                            <option>มัธยมศึกษาตอนต้น</option>
+                            <option>มัธยมศึกษาตอนปลาย</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">ครั้งที่</label>
+                        <select id="f-round" class="w-full px-4 py-2 rounded-xl border border-slate-300 bg-white">
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div id="assessment-items-container" class="space-y-8"></div>
+
+            <div class="mt-12 pt-8 border-t border-slate-200 space-y-6">
+                <h3 class="text-lg font-bold text-slate-800">ข้อมูลเพิ่มเติมและรูปภาพ</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-1">จุดเด่น</label>
+                            <textarea id="f-strengths" rows="3" class="w-full px-4 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="ระบุจุดเด่นในการสอน..."></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-1">ควรพัฒนา</label>
+                            <textarea id="f-improve" rows="3" class="w-full px-4 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="สิ่งที่ควรปรับปรุง..."></textarea>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">ภาพประกอบ (สูงสุด 3 รูป)</label>
+                        <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-slate-300 border-dashed rounded-xl hover:border-indigo-400 transition cursor-pointer relative" onclick="document.getElementById('img-input').click()">
+                            <div class="space-y-1 text-center">
+                                <i class="fas fa-image text-slate-400 text-3xl mb-2"></i>
+                                <p class="text-xs text-slate-500">คลิกเพื่อเลือกไฟล์รูปภาพ</p>
+                            </div>
+                            <input type="file" id="img-input" class="hidden" multiple accept="image/*" onchange="handleFileSelect(event)">
+                        </div>
+                        <div id="img-preview" class="grid grid-cols-3 gap-2 mt-4"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-12 flex flex-col sm:flex-row gap-4">
+                <button onclick="saveData()" class="flex-1 py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-bold shadow-lg shadow-indigo-200 transition-all">
+                    <i class="fas fa-save mr-2"></i> บันทึกข้อมูล
+                </button>
+                <button onclick="resetForm()" class="px-8 py-4 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-2xl font-bold transition-all">
+                    ล้างค่า
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- History Page -->
+    <div id="history-page" class="page hidden fade-in">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+            <h2 class="text-2xl font-bold text-slate-900">ประวัติการนิเทศ</h2>
+            <div class="flex flex-wrap gap-2 w-full md:w-auto">
+                <input type="text" id="h-search" onkeyup="filterHistory()" placeholder="ค้นหาชื่อครู/สถานที่..." class="px-4 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                <select id="h-tumbon" onchange="filterHistory()" class="px-4 py-2 rounded-xl border border-slate-200 text-sm bg-white">
+                    <option value="">ทุกตำบล</option>
+                </select>
+            </div>
+        </div>
+        <div id="history-list" class="space-y-4"></div>
+    </div>
+
+    <!-- Summary Page -->
+    <div id="summary-page" class="page hidden fade-in">
+        <h2 class="text-2xl font-bold text-slate-900 mb-6">สรุปผลเชิงลึก</h2>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                <h3 class="font-bold text-slate-700 mb-4 text-center">คะแนนเฉลี่ยแยกตามด้าน</h3>
+                <div class="h-64"><canvas id="chart-cat"></canvas></div>
+            </div>
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                <h3 class="font-bold text-slate-700 mb-4 text-center">สัดส่วนการนิเทศรายผู้นิเทศ</h3>
+                <div class="h-64"><canvas id="chart-user"></canvas></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Report Page -->
+    <div id="report-page" class="page hidden fade-in">
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+            <h2 class="text-2xl font-bold text-slate-900 mb-6">ออกรายงานการนิเทศ</h2>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm">
+                    <thead class="bg-slate-50 text-slate-600 font-semibold">
+                        <tr>
+                            <th class="px-4 py-3 border-b">วันที่</th>
+                            <th class="px-4 py-3 border-b">ศกร.ตำบล</th>
+                            <th class="px-4 py-3 border-b">ครูผู้รับนิเทศ</th>
+                            <th class="px-4 py-3 border-b">คะแนน</th>
+                            <th class="px-4 py-3 border-b text-center">จัดการ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="report-table-body" class="divide-y divide-slate-100"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+  </main>
+
+  <!-- Print Layout (A4) -->
+  <div id="print-layout">
+    <div class="flex items-center gap-6 mb-6 pb-6 border-b-2 border-slate-800">
+        <img src="https://lh3.googleusercontent.com/pw/AP1GczPwzDwftGwpLJnfW74bLfgx4GmVpPVq2MoOkd7srBGreuQM1qtFQwLIg0tytng6BEfEjce4nio81AWrPno9hrj80dIz_koQ4_SpcN832yfuOVnwi-_oZuAfCsbYOdOuoivktXbQIhjSBbZIngPIUYY=w900-h900-s-no-gm?authuser=0" class="w-24 h-24" alt="Garuda">
+        <div>
+            <h1 class="text-xl font-bold uppercase">แบบรายงานผลการนิเทศการจัดการเรียนการสอน</h1>
+            <h2 class="text-lg font-bold">ศูนย์ส่งเสริมการเรียนรู้ระดับอำเภอแม่ริม</h2>
+            <p>ภาคเรียนที่ 2 ปีการศึกษา 2568</p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-y-2 mb-6 text-sm">
+        <div class="col-span-2"><strong>ชื่อกิจกรรม:</strong> <span id="p-activity"></span></div>
+        <div><strong>ตำบล:</strong> <span id="p-tumbon"></span></div>
+        <div><strong>สถานที่จัด:</strong> <span id="p-location-detail"></span></div>
+        <div><strong>วันที่นิเทศ:</strong> <span id="p-date"></span></div>
+        <div><strong>ครูผู้สอน:</strong> <span id="p-teacher"></span></div>
+        <div><strong>ระดับชั้น:</strong> <span id="p-class"></span></div>
+        <div><strong>ครั้งที่:</strong> <span id="p-round"></span></div>
+        <div><strong>ผู้นิเทศ:</strong> <span id="p-supervisor"></span></div>
+    </div>
+
+    <table class="mb-6">
+        <thead class="bg-slate-100">
+            <tr>
+                <th class="w-4/5 text-left">รายการประเมิน</th>
+                <th class="text-center">ผล</th>
+            </tr>
+        </thead>
+        <tbody id="p-table"></tbody>
+    </table>
+
+    <div class="space-y-4 mb-8">
+        <div class="p-3 border border-black rounded">
+            <strong>จุดเด่น:</strong> <span id="p-strengths"></span>
+        </div>
+        <div class="p-3 border border-black rounded">
+            <strong>สิ่งที่ควรพัฒนา:</strong> <span id="p-improve"></span>
+        </div>
+    </div>
+
+    <div id="p-images-container" class="mb-10"></div>
+
+    <div class="flex justify-between mt-12 px-10">
+        <div class="text-center">
+            <p class="mb-10">ลงชื่อ..............................................ผู้รับการนิเทศ</p>
+            <p id="p-sign-teacher"></p>
+        </div>
+        <div class="text-center">
+            <p class="mb-10">ลงชื่อ..............................................ผู้นิเทศ</p>
+            <p id="p-sign-supervisor"></p>
+        </div>
+    </div>
+  </div>
+
+  <footer class="bg-white border-t border-slate-200 py-6 text-center no-print">
+      <p class="text-slate-400 text-xs">© 2025 ระบบนิเทศออนไลน์ สกร.ระดับอำเภอแม่ริม | พัฒนาโดย นายกนกพิชชา ไชยโย</p>
+  </footer>
+
+  <script>
+    // --- Configuration ---
+    const TEACHERS = [
+        "นางผ่องศรี ปันปวงชนม์", "นางสาวบุณยกร โฆษณสันติ", "นางสาวธนิตศา พิลาเมือง", 
+        "นางพัชรี ราวิชัย", "นางวราพร ครจำนงค์", "นางรัตนาพร ศรีสุข", 
+        "นางสาวเบญจพรรณ ปันก้ำ", "นางสาววิมลา ศรีพราย", "นางสาวผ่องพรรณ เสาร์คำน้อย",
+        "นางสาวจรัสลักษณ์ จันทร์กระจาย", "นายณัฐวุฒิ ใจอด", "นางสาวศิรินทิพย์ กังถู", "นางสาวสุนิษา พรมสากัน"
+    ];
+
+    const STRUCTURE = [
+        { 
+            title: "1. ปัจจัยป้อน (Input)", color: "indigo",
+            items: [
+                { id: "q1_1", text: "1.1 มีหลักสูตร/โครงการ" },
+                { id: "q1_2", text: "1.2 มีแผนการจัดการเรียนรู้ตามหลักสูตร" },
+                { id: "q1_3", text: "1.3 วิทยากรเตรียมวัสดุสำหรับจัดกระบวนการเรียนรู้ตามหลักสูตร" },
+                { id: "q1_4", text: "1.4 วิทยากรเตรียมสื่อ อุปกรณ์สำหรับจัดการเรียนรู้" }
+            ]
+        },
+        { 
+            title: "2. กระบวนการ (Process)", color: "amber",
+            items: [
+                { id: "q2_1", text: "2.1 วิทยากรจัดกระบวนการเรียนรู้ตามแผนการจัดการเรียนรู้" },
+                { id: "q2_2", text: "2.2 วิทยากรใช้สื่อ/วัสดุอุปกรณ์ ประกอบกิจกรรมการจัดการเรียนรู้อย่างเหมาะสม" },
+                { id: "q2_3", text: "2.3 วิทยากรใช้สื่อเทคโนโลยีประกอบการจัดการเรียนรู้" },
+                { id: "q2_4", text: "2.4 การถ่ายทอดความรู้และประสบการณ์ของวิทยากรถูกต้อง" },
+                { id: "q2_5", text: "2.5 ผู้เรียนมีส่วนร่วมในการจัดการเรียนรู้" },
+                { id: "q2_6", text: "2.6 เครือข่ายมีส่วนร่วมในการจัดการเรียนรู้" },
+                { id: "q2_7", text: "2.7 มีการวัดผล ประเมินผล ทั้งภาคทฤษฎีและปฏิบัติ" }
+            ]
+        },
+        { 
+            title: "3. ผลผลิต (Output) / ผลลัพธ์ (Outcome)", color: "emerald",
+            items: [
+                { id: "q3_1", text: "3.1 ผู้เรียนครบตามจำนวนที่กำหนดในการจัดตั้งกลุ่ม" },
+                { id: "q3_2", text: "3.2 ผู้เรียนมีทักษะการเรียนรู้เพื่อการพัฒนาตนเอง ทั้งทักษะอาชีพ ทักษะชีวิต " },
+                { id: "q3_3", text: "3.3 ผู้เรียนนำความรู้ไปสร้างอาชีพ เพิ่มรายได้ ลดรายจ่าย แก้ปัญหาในการดำรงชีวิต" },
+                { id: "q3_4", text: "3.4 สถานศึกษามี ระบบนิเทศ ติดตาม และพัฒนาคุณภาพการเรียนรู้" }
+            ]
+        }
+    ];
+
+    let allData = [];
+    let uploadedImages = [];
+    let currentEditId = null;
+    let charts = {};
+
+    // --- Init ---
+    window.onload = () => {
+        setupForm();
+        loadInitialData();
+        checkAuth();
+        document.getElementById('f-date').valueAsDate = new Date();
+    };
+
+    function setupForm() {
+        const tSel = document.getElementById('f-teacher');
+        TEACHERS.sort().forEach(t => tSel.add(new Option(t, t)));
+
+        const hTumbon = document.getElementById('h-tumbon');
+        const tumbons = Array.from(document.getElementById('f-tumbon').options).map(o => o.text);
+        tumbons.forEach(t => { if(t !== 'เลือกตำบล') hTumbon.add(new Option(t, t)) });
+
+        const container = document.getElementById('assessment-items-container');
+        STRUCTURE.forEach(sec => {
+            let html = `
+                <div class="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm">
+                    <div class="bg-${sec.color}-50 px-6 py-4 border-b border-${sec.color}-100">
+                        <h4 class="font-bold text-${sec.color}-800">${sec.title}</h4>
+                    </div>
+                    <div class="p-6 space-y-4">
+            `;
+            sec.items.forEach(item => {
+                html += `
+                    <div class="q-item flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-2xl hover:bg-slate-50 transition border border-slate-50" data-id="${item.id}">
+                        <span class="text-slate-700 text-sm font-medium">${item.text}</span>
+                        <div class="flex gap-2 shrink-0">
+                            <button onclick="setScore(this, 'มี')" class="status-btn px-6 py-2 rounded-xl text-xs font-bold text-slate-400 bg-white shadow-sm has">มี</button>
+                            <button onclick="setScore(this, 'ไม่มี')" class="status-btn px-6 py-2 rounded-xl text-xs font-bold text-slate-400 bg-white shadow-sm not-has">ไม่มี</button>
+                        </div>
+                    </div>
+                `;
+            });
+            html += `</div></div>`;
+            container.innerHTML += html;
+        });
+    }
+
+    // --- Core Logic ---
+    function setScore(btn, val) {
+        const parent = btn.closest('.q-item');
+        parent.querySelectorAll('.status-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        parent.dataset.val = val;
+    }
+
+    async function loadInitialData() {
+        document.getElementById('loading-spinner').classList.remove('hidden');
+        try {
+            if (typeof google !== 'undefined' && google.script) {
+                google.script.run.withSuccessHandler(data => {
+                    allData = data || [];
+                    renderAll();
+                    document.getElementById('loading-spinner').classList.add('hidden');
+                }).getAssessmentData();
+            } else {
+                const local = localStorage.getItem('sgr_db');
+                allData = local ? JSON.parse(local) : [];
+                setTimeout(() => {
+                    renderAll();
+                    document.getElementById('loading-spinner').classList.add('hidden');
+                }, 800);
+            }
+        } catch (e) { console.error(e); }
+    }
+
+    function renderAll() {
+        updateStats();
+        renderRecent();
+        renderHistory();
+        renderSummary();
+        renderReport();
+    }
+
+    function updateStats() {
+        document.getElementById('stat-total').innerText = allData.length;
+        const totalP = allData.reduce((acc, cur) => acc + (cur.Score / cur.TotalItems), 0);
+        document.getElementById('stat-avg').innerText = allData.length ? Math.round((totalP / allData.length) * 100) + '%' : '0%';
+        document.getElementById('stat-users').innerText = new Set(allData.map(d => d.Supervisor)).size;
+        document.getElementById('stat-places').innerText = new Set(allData.map(d => d.Tumbon)).size;
+    }
+
+    function renderRecent() {
+        const sorted = [...allData].sort((a,b) => new Date(b.AssessmentDate) - new Date(a.AssessmentDate)).slice(0, 4);
+        const grid = document.getElementById('recent-grid');
+        grid.innerHTML = sorted.length ? '' : '<p class="col-span-full text-center py-10 text-slate-400">ยังไม่มีข้อมูลบันทึก</p>';
+        sorted.forEach(d => {
+            const p = Math.round((d.Score / d.TotalItems) * 100);
+            grid.innerHTML += `
+                <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm hover:shadow-md transition">
+                    <div class="flex justify-between items-start mb-4">
+                        <span class="text-[10px] bg-indigo-50 text-indigo-600 px-2 py-1 rounded-full font-bold">${new Date(d.AssessmentDate).toLocaleDateString('th-TH')}</span>
+                        <span class="text-xs font-bold ${p >= 80 ? 'text-green-600' : 'text-amber-600'}">${p}%</span>
+                    </div>
+                    <h4 class="font-bold text-slate-800 truncate">${d.ActivityName || d.Tumbon}</h4>
+                    <p class="text-xs text-slate-500 mb-4">${d.TeacherName}</p>
+                    <div class="flex items-center gap-2">
+                        <div class="w-6 h-6 bg-slate-100 rounded-full flex items-center justify-center text-[10px]"><i class="fas fa-user"></i></div>
+                        <span class="text-[10px] text-slate-400 truncate">${d.Supervisor}</span>
+                    </div>
+                </div>
+            `;
+        });
+    }
+
+    function renderHistory() {
+        const list = document.getElementById('history-list');
+        list.innerHTML = '';
+        allData.forEach(d => {
+            const p = Math.round((d.Score / d.TotalItems) * 100);
+            list.innerHTML += `
+                <div class="history-card bg-white p-4 rounded-2xl border border-slate-200 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:border-indigo-200 transition" data-name="${d.TeacherName}" data-place="${d.Tumbon}">
+                    <div class="flex gap-4 items-center">
+                        <div class="w-12 h-12 ${p >= 80 ? 'bg-green-100 text-green-600' : 'bg-amber-100 text-amber-600'} rounded-2xl flex flex-col items-center justify-center font-bold">
+                            <span class="text-lg">${p}</span>
+                            <span class="text-[8px]">%</span>
+                        </div>
+                        <div class="max-w-[250px]">
+                            <h4 class="font-bold text-slate-800 truncate">${d.ActivityName || 'ไม่ระบุชื่อกิจกรรม'}</h4>
+                            <p class="text-xs text-slate-600 font-semibold">${d.TeacherName}</p>
+                            <p class="text-[10px] text-slate-400">${d.Tumbon} | ${new Date(d.AssessmentDate).toLocaleDateString('th-TH')}</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-2 w-full md:w-auto">
+                        <button onclick="preparePrint('${d.ID}')" class="flex-1 md:flex-none px-4 py-2 bg-slate-100 text-slate-600 rounded-xl text-xs font-bold hover:bg-slate-200"><i class="fas fa-print mr-2"></i>พิมพ์</button>
+                        <button onclick="editItem('${d.ID}')" class="admin-only flex-1 md:flex-none px-4 py-2 bg-indigo-50 text-indigo-600 rounded-xl text-xs font-bold hover:bg-indigo-100"><i class="fas fa-edit mr-2"></i>แก้ไข</button>
+                        <button onclick="deleteItem('${d.ID}')" class="admin-only px-3 py-2 bg-red-50 text-red-600 rounded-xl text-xs hover:bg-red-100"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>
+            `;
+        });
+    }
+
+    function renderSummary() {
+        const ctxCat = document.getElementById('chart-cat');
+        const ctxUser = document.getElementById('chart-user');
+
+        const catLabels = STRUCTURE.map(s => s.title.split(' ')[1]);
+        const catData = STRUCTURE.map(sec => {
+            let sum = 0, count = 0;
+            allData.forEach(d => {
+                sec.items.forEach(it => {
+                    if(d[it.id] === 'มี') sum++;
+                    count++;
+                });
+            });
+            return count ? Math.round((sum / count) * 100) : 0;
+        });
+
+        if(charts.cat) charts.cat.destroy();
+        charts.cat = new Chart(ctxCat, {
+            type: 'bar',
+            data: { labels: catLabels, datasets: [{ label: 'คะแนนเฉลี่ย (%)', data: catData, backgroundColor: ['#6366f1', '#f59e0b', '#10b981'] }] },
+            options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, max: 100 } } }
+        });
+
+        const users = [...new Set(allData.map(d => d.Supervisor))];
+        const userData = users.map(u => allData.filter(d => d.Supervisor === u).length);
+
+        if(charts.user) charts.user.destroy();
+        charts.user = new Chart(ctxUser, {
+            type: 'doughnut',
+            data: { labels: users, datasets: [{ data: userData, backgroundColor: ['#6366f1', '#ec4899', '#f59e0b', '#10b981', '#3b82f6'] }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+        });
+    }
+
+    function renderReport() {
+        const body = document.getElementById('report-table-body');
+        body.innerHTML = '';
+        allData.forEach(d => {
+            const p = Math.round((d.Score / d.TotalItems) * 100);
+            body.innerHTML += `
+                <tr class="hover:bg-slate-50 transition">
+                    <td class="px-4 py-4">${new Date(d.AssessmentDate).toLocaleDateString('th-TH')}</td>
+                    <td class="px-4 py-4 font-medium text-slate-800">${d.Tumbon}</td>
+                    <td class="px-4 py-4">${d.TeacherName}</td>
+                    <td class="px-4 py-4">
+                        <span class="px-2 py-1 rounded-full text-[10px] font-bold ${p >= 80 ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}">${p}%</span>
+                    </td>
+                    <td class="px-4 py-4 text-center">
+                        <button onclick="preparePrint('${d.ID}')" class="text-indigo-600 hover:text-indigo-900 font-bold"><i class="fas fa-print"></i></button>
+                    </td>
+                </tr>
+            `;
+        });
+    }
+
+    // --- File Handling ---
+    function handleFileSelect(e) {
+        const files = Array.from(e.target.files).slice(0, 3);
+        const preview = document.getElementById('img-preview');
+        preview.innerHTML = '';
+        uploadedImages = [];
+
+        files.forEach(file => {
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                uploadedImages.push(ev.target.result);
+                preview.innerHTML += `
+                    <div class="relative group h-20 rounded-lg overflow-hidden border">
+                        <img src="${ev.target.result}" class="w-full h-full object-cover">
+                        <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+                            <i class="fas fa-check text-white"></i>
+                        </div>
+                    </div>
+                `;
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    // --- Action Functions ---
+    async function saveData() {
+        const payload = {
+            ID: currentEditId || Date.now().toString(),
+            AssessmentDate: document.getElementById('f-date').value,
+            Supervisor: document.getElementById('f-supervisor').value,
+            Tumbon: document.getElementById('f-tumbon').value,
+            TeacherName: document.getElementById('f-teacher').value,
+            ActivityName: document.getElementById('f-activity').value,
+            LocationDetail: document.getElementById('f-location-detail').value,
+            ClassLevel: document.getElementById('f-class').value,
+            AssessmentRound: document.getElementById('f-round').value,
+            Strengths: document.getElementById('f-strengths').value,
+            Improvements: document.getElementById('f-improve').value,
+            Image1: uploadedImages[0] || "",
+            Image2: uploadedImages[1] || "",
+            Image3: uploadedImages[2] || ""
+        };
+
+        if(!payload.Supervisor || !payload.TeacherName || !payload.Tumbon || !payload.ActivityName) {
+            return Swal.fire('ข้อมูลไม่ครบ', 'กรุณาระบุผู้นิเทศ ครูผู้รับนิเทศ ชื่อกิจกรรม และตำบล', 'warning');
+        }
+
+        let score = 0, total = 0;
+        document.querySelectorAll('.q-item').forEach(el => {
+            const qId = el.dataset.id;
+            const val = el.dataset.val || 'ไม่มี';
+            payload[qId] = val;
+            if(val === 'มี') score++;
+            total++;
+        });
+
+        payload.Score = score;
+        payload.TotalItems = total;
+
+        document.getElementById('loading-spinner').classList.remove('hidden');
+
+        if (typeof google !== 'undefined' && google.script) {
+            google.script.run.withSuccessHandler(() => {
+                Swal.fire('สำเร็จ', 'บันทึกข้อมูลเรียบร้อยแล้ว', 'success');
+                resetForm();
+                loadInitialData();
+                showPage('dashboard');
+            }).saveAssessmentData(payload);
+        } else {
+            let db = JSON.parse(localStorage.getItem('sgr_db') || '[]');
+            if(currentEditId) db = db.filter(x => x.ID.toString() !== currentEditId.toString());
+            db.push(payload);
+            localStorage.setItem('sgr_db', JSON.stringify(db));
+            setTimeout(() => {
+                Swal.fire('สำเร็จ (จำลอง)', 'บันทึกข้อมูลในบราวเซอร์เรียบร้อย', 'success');
+                resetForm();
+                loadInitialData();
+                showPage('dashboard');
+            }, 1000);
+        }
+    }
+
+    function editItem(id) {
+        const item = allData.find(d => d.ID.toString() === id.toString());
+        if(!item) return;
+        currentEditId = id;
+        document.getElementById('form-title').innerText = "แก้ไขข้อมูลนิเทศ";
+        document.getElementById('f-date').value = item.AssessmentDate ? item.AssessmentDate.split('T')[0] : '';
+        document.getElementById('f-supervisor').value = item.Supervisor || '';
+        document.getElementById('f-tumbon').value = item.Tumbon || '';
+        document.getElementById('f-teacher').value = item.TeacherName || '';
+        document.getElementById('f-activity').value = item.ActivityName || '';
+        document.getElementById('f-location-detail').value = item.LocationDetail || '';
+        document.getElementById('f-class').value = item.ClassLevel || 'ประถมศึกษา';
+        document.getElementById('f-round').value = item.AssessmentRound || '1';
+        document.getElementById('f-strengths').value = item.Strengths || '';
+        document.getElementById('f-improve').value = item.Improvements || '';
+
+        document.querySelectorAll('.q-item').forEach(el => {
+            const qId = el.dataset.id;
+            const val = item[qId] || 'ไม่มี';
+            const btn = el.querySelector(`.status-btn.${val === 'มี' ? 'has' : 'not-has'}`);
+            if(btn) setScore(btn, val);
+        });
+
+        showPage('assessment');
+    }
+
+    function deleteItem(id) {
+        Swal.fire({
+            title: 'ยืนยันการลบ?',
+            text: "ข้อมูลนี้จะถูกลบออกจากระบบอย่างถาวร",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#EF4444',
+            confirmButtonText: 'ลบข้อมูล'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                document.getElementById('loading-spinner').classList.remove('hidden');
+                if (typeof google !== 'undefined' && google.script) {
+                    google.script.run.withSuccessHandler(() => {
+                        Swal.fire('ลบแล้ว', 'ข้อมูลถูกลบเรียบร้อย', 'success');
+                        loadInitialData();
+                    }).deleteAssessmentData(id);
+                } else {
+                    let db = JSON.parse(localStorage.getItem('sgr_db') || '[]');
+                    db = db.filter(x => x.ID.toString() !== id.toString());
+                    localStorage.setItem('sgr_db', JSON.stringify(db));
+                    setTimeout(() => {
+                        loadInitialData();
+                        Swal.fire('ลบแล้ว', 'ลบข้อมูลจำลองเรียบร้อย', 'success');
+                    }, 500);
+                }
+            }
+        });
+    }
+
+    function preparePrint(id) {
+        const d = allData.find(item => item.ID.toString() === id.toString());
+        if(!d) return;
+
+        document.getElementById('p-activity').innerText = d.ActivityName || '-';
+        document.getElementById('p-tumbon').innerText = d.Tumbon || '-';
+        document.getElementById('p-location-detail').innerText = d.LocationDetail || '-';
+        document.getElementById('p-date').innerText = d.AssessmentDate ? new Date(d.AssessmentDate).toLocaleDateString('th-TH', { year:'numeric', month:'long', day:'numeric'}) : '-';
+        document.getElementById('p-teacher').innerText = d.TeacherName || '-';
+        document.getElementById('p-class').innerText = d.ClassLevel || '-';
+        document.getElementById('p-round').innerText = d.AssessmentRound || '-';
+        document.getElementById('p-supervisor').innerText = d.Supervisor || '-';
+        document.getElementById('p-strengths').innerText = d.Strengths || '-';
+        document.getElementById('p-improve').innerText = d.Improvements || '-';
+        document.getElementById('p-sign-teacher').innerText = `( ${d.TeacherName || '..............................................'} )`;
+        document.getElementById('p-sign-supervisor').innerText = `( ${d.Supervisor || '..............................................'} )`;
+
+        const tableBody = document.getElementById('p-table');
+        tableBody.innerHTML = '';
+        STRUCTURE.forEach(sec => {
+            tableBody.innerHTML += `<tr class="bg-slate-50 font-bold"><td colspan="2">${sec.title}</td></tr>`;
+            sec.items.forEach(it => {
+                const val = d[it.id] === 'มี' ? '✓' : '-';
+                tableBody.innerHTML += `<tr><td>${it.text}</td><td class="text-center font-bold">${val}</td></tr>`;
+            });
+        });
+        
+        tableBody.innerHTML += `
+            <tr class="bg-slate-100 font-bold">
+                <td class="text-right">สรุปผลการประเมิน</td>
+                <td class="text-center">${d.Score}/${d.TotalItems} (${Math.round((d.Score/d.TotalItems)*100)}%)</td>
+            </tr>
+        `;
+
+        const imgCon = document.getElementById('p-images-container');
+        imgCon.innerHTML = '';
+        if(d.Image1) imgCon.innerHTML += `<img src="${d.Image1}">`;
+        if(d.Image2) imgCon.innerHTML += `<img src="${d.Image2}">`;
+        if(d.Image3) imgCon.innerHTML += `<img src="${d.Image3}">`;
+
+        setTimeout(() => { window.print(); }, 500);
+    }
+
+    function resetForm() {
+        currentEditId = null;
+        document.getElementById('form-title').innerText = "บันทึกนิเทศการเรียนรู้เพื่อการพัฒนาตนเอง";
+        document.getElementById('f-supervisor').value = '';
+        document.getElementById('f-tumbon').value = '';
+        document.getElementById('f-teacher').value = '';
+        document.getElementById('f-activity').value = '';
+        document.getElementById('f-location-detail').value = '';
+        document.getElementById('f-strengths').value = '';
+        document.getElementById('f-improve').value = '';
+        document.querySelectorAll('.status-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.q-item').forEach(el => delete el.dataset.val);
+        document.getElementById('img-preview').innerHTML = '';
+        uploadedImages = [];
+    }
+
+    // --- UI Helpers ---
+    function showPage(pageId) {
+        document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
+        document.getElementById(pageId + '-page').classList.remove('hidden');
+        document.querySelectorAll('.nav-link').forEach(l => {
+            l.classList.remove('active');
+            if(l.dataset.page === pageId) l.classList.add('active');
+        });
+        document.getElementById('mobile-menu').classList.add('hidden');
+        window.scrollTo(0,0);
+    }
+
+    function toggleMobileMenu() {
+        document.getElementById('mobile-menu').classList.toggle('hidden');
+    }
+
+    function filterHistory() {
+        const query = document.getElementById('h-search').value.toLowerCase();
+        const tumbon = document.getElementById('h-tumbon').value;
+        document.querySelectorAll('.history-card').forEach(card => {
+            const name = card.dataset.name.toLowerCase();
+            const place = card.dataset.place;
+            const matchesQuery = name.includes(query) || place.toLowerCase().includes(query);
+            const matchesTumbon = !tumbon || place === tumbon;
+            card.style.display = matchesQuery && matchesTumbon ? 'flex' : 'none';
+        });
+    }
+
+    // --- Auth ---
+    function openLoginModal() { document.getElementById('login-modal').classList.remove('hidden'); }
+    function closeLoginModal() { document.getElementById('login-modal').classList.add('hidden'); }
+    
+    function handleLogin() {
+        const pass = document.getElementById('admin-pass').value;
+        if(pass === '1234' || pass === 'admin') {
+            localStorage.setItem('sgr_admin', 'true');
+            checkAuth();
+            closeLoginModal();
+            Swal.fire({ icon: 'success', title: 'เข้าสู่ระบบสำเร็จ', toast: true, position: 'top-end', showConfirmButton: false, timer: 3000 });
+        } else {
+            Swal.fire('รหัสผ่านไม่ถูกต้อง', 'กรุณาลองใหม่อีกครั้ง', 'error');
+        }
+    }
+
+    function handleLogout() {
+        localStorage.removeItem('sgr_admin');
+        checkAuth();
+        showPage('dashboard');
+    }
+
+    function checkAuth() {
+        const isAdmin = localStorage.getItem('sgr_admin') === 'true';
+        if(isAdmin) {
+            document.body.classList.add('is-admin');
+            document.getElementById('btn-login').classList.add('hidden');
+            document.getElementById('btn-logout').classList.remove('hidden');
+        } else {
+            document.body.classList.remove('is-admin');
+            document.getElementById('btn-login').classList.remove('hidden');
+            document.getElementById('btn-logout').classList.add('hidden');
+        }
+    }
+  </script>
 </body>
 </html>
